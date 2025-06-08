@@ -2,10 +2,10 @@
 session_start();
 
 // Configuración de la base de datos
-$host = 'localhost';
+$host = 'mysql';
 $dbname = 'criminalistica_db';
 $username = 'root';
-$password = '';
+$password = 'clave123';
 
 // Función para conectar a la base de datos
 function conectarDB() {

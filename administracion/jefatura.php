@@ -77,10 +77,10 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                 </button>
             </div>
             
-            <button class="logout-btn" onclick="window.location.href='http://localhost/sistemadocumentario/index.php'">
-                 <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            <button class="logout-btn" onclick="window.location.href='../index.php'">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
             </button>
-
+            
         </div>
         
         <!-- MAIN CONTENT -->

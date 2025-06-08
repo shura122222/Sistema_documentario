@@ -1,14 +1,14 @@
 <?php
-$server = "localhost";
+$server = "mysql";  // Importante: usar "mysql", no "some-mysql"
 $user = "root";
-$pass = "";
+$pass = "clave123";
 $db = "criminalistica_db";
 
 $conexion = new mysqli($server, $user, $pass, $db);
 
 if ($conexion->connect_errno) {
-    die("Conexion Fallida " . $conexion->connect_errno);
+    die("Conexion Fallida: " . $conexion->connect_error);
 } else {
-    echo "conectado";
+    echo "¡Conectado exitosamente a la base de datos!";
 }
 ?>
