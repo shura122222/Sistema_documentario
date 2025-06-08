@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 services:
   mysql:
     image: mysql:latest
@@ -30,4 +31,38 @@ networks:
     driver: bridge
 
 volumes:
+=======
+services:
+  mysql:
+    image: mysql:latest
+    container_name: some-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: clave123
+      MYSQL_DATABASE: criminalistica_db
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - mi-red-web
+
+  web:
+    image: mi-app-php
+    container_name: sistema_documentario
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - mi-red-web
+    volumes:
+      - .:/var/www/html
+
+networks:
+  mi-red-web:
+    driver: bridge
+
+volumes:
+>>>>>>> fe3d3289c7461a3d1a3720c98cea6a2d9f112c97
   mysql_data:
