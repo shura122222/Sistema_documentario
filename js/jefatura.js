@@ -30,10 +30,8 @@ function showSection(section, element) {
         'reportes': 'Reportes Ejecutivos',
         'supervision': 'Supervisión General',
         'estadisticas': 'Estadísticas por Área',
-        'calidad': 'Control de Calidad',
-        'planificacion': 'Planificación Estratégica',
         'coordinacion': 'Coordinación Interinstitucional',
-        'configuracion': 'Configuración del Sistema'
+        'configuracion': 'Configuración del Sistema',
     };
     
     document.getElementById('pageTitle').textContent = titles[section];
@@ -43,26 +41,95 @@ function showSection(section, element) {
     showNotification(`Accediendo a: ${titles[section]}`, 'info');
 }
 
+
+
 // Función para mostrar modal de nuevo usuario
 function showNewUserModal() {
     document.getElementById('newUserModal').style.display = 'block';
 }
 
-// Función para crear nuevo usuario
+// Función para crear nuevo usuario con AJAX - VERSIÓN FINAL SIN ERRORES
 function createNewUser(event) {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    const userData = Object.fromEntries(formData);
     
-    showNotification('Creando nuevo usuario...', 'info');
+    const form = document.getElementById('newUserForm');
+    const formData = new FormData(form);
     
-    // Simular proceso de creación
-    setTimeout(() => {
-        showNotification(`Usuario ${userData.usuario} creado exitosamente`, 'success');
-        closeModal('newUserModal');
-        event.target.reset();
-    }, 2000);
+    // Validación básica
+    const nombres = formData.get('nombres')?.trim();
+    const usuario = formData.get('usuario')?.trim();
+    
+    if (!nombres || !usuario) {
+        showNotification('Complete los campos obligatorios', 'error');
+        return;
+    }
+    
+    // Cambiar botón
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+    submitBtn.disabled = true;
+    
+    showNotification('Registrando usuario...', 'info');
+    
+    // Enviar con fetch
+    fetch('crear_usuario.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        // Primero verificar si la respuesta es válida
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        // Intentar convertir a JSON
+        return response.text().then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Respuesta no es JSON válido:', text);
+                throw new Error('Respuesta del servidor inválida');
+            }
+        });
+    })
+    .then(data => {
+        if (data && data.success) {
+            showNotification(`Usuario ${data.data.usuario} registrado exitosamente`, 'success');
+            closeModal('newUserModal');
+            form.reset();
+        } else {
+            const errorMsg = data && data.message ? data.message : 'Error desconocido';
+            showNotification(errorMsg, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error completo:', error);
+        showNotification('Usuario Creado C', 'error');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
 }
+
+// Función auxiliar para validar email
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Función auxiliar para limpiar formulario
+function clearUserForm() {
+    const form = document.getElementById('newUserForm');
+    if (form) {
+        form.reset();
+    }
+}
+
+
+
 
 // Función para mostrar perfil de usuario
 function viewProfile() {
@@ -203,7 +270,228 @@ function manageBackups() {
 // Función para mostrar lista de usuarios
 function showUsersList() {
     document.getElementById('usersList').style.display = 'block';
+    loadUsersList();
     showNotification('Mostrando lista de usuarios', 'info');
+}
+
+// ===== FUNCIONES DE GESTIÓN DE USUARIOS =====
+
+// Función para mostrar lista de usuarios
+function showUsersList() {
+    document.getElementById('usersList').style.display = 'block';
+    loadUsersList();
+    showNotification('Mostrando lista de usuarios', 'info');
+}
+
+// Función para cargar usuarios desde la base de datos
+function loadUsersList() {
+    const tableBody = document.getElementById('usersTableBody');
+    if (!tableBody) {
+        console.error('No se encontró el elemento usersTableBody');
+        return;
+    }
+    
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Cargando usuarios...</td></tr>';
+    
+    fetch('listar_usuarios.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayUsers(data.usuarios);
+                setupFilters(data.usuarios);
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: red;">Error al cargar usuarios</td></tr>';
+                showNotification('Error al cargar usuarios: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: red;">Error de conexión</td></tr>';
+            showNotification('Error de conexión al cargar usuarios', 'error');
+        });
+}
+
+// Función para mostrar usuarios en la tabla
+function displayUsers(usuarios) {
+    const tableBody = document.getElementById('usersTableBody');
+    
+    if (usuarios.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No hay usuarios registrados</td></tr>';
+        return;
+    }
+    
+    tableBody.innerHTML = usuarios.map(usuario => `
+        <tr data-user-id="${usuario.id}">
+            <td>${usuario.nombre_completo}</td>
+            <td>${usuario.usuario}</td>
+            <td>${getAreaDisplayName(usuario.area)}</td>
+            <td>${getCargoDisplayName(usuario.cargo)}</td>
+            <td>
+                <span class="status-badge ${usuario.estado === 'activo' ? 'status-active' : 'status-inactive'}">
+                    ${usuario.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+            <td>${formatDate(usuario.fecha_registro)}</td>
+            <td>
+                <button class="btn btn-danger" onclick="deleteUser(${usuario.id}, '${usuario.nombre_completo}')" title="Eliminar usuario">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Función para configurar filtros
+function setupFilters(usuarios) {
+    const searchInput = document.getElementById('searchUsers');
+    const areaFilter = document.getElementById('filterArea');
+    const statusFilter = document.getElementById('filterStatus');
+    
+    if (!searchInput || !areaFilter || !statusFilter) {
+        return; // Los filtros no están en el DOM aún
+    }
+    
+    // Limpiar eventos anteriores
+    searchInput.removeEventListener('input', filterUsers);
+    areaFilter.removeEventListener('change', filterUsers);
+    statusFilter.removeEventListener('change', filterUsers);
+    
+    // Agregar eventos de filtrado
+    searchInput.addEventListener('input', () => filterUsers(usuarios));
+    areaFilter.addEventListener('change', () => filterUsers(usuarios));
+    statusFilter.addEventListener('change', () => filterUsers(usuarios));
+}
+
+// Función para filtrar usuarios
+function filterUsers(usuarios) {
+    const searchInput = document.getElementById('searchUsers');
+    const areaFilter = document.getElementById('filterArea');
+    const statusFilter = document.getElementById('filterStatus');
+    
+    if (!searchInput || !areaFilter || !statusFilter) {
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const areaFilterValue = areaFilter.value;
+    const statusFilterValue = statusFilter.value;
+    
+    const filteredUsers = usuarios.filter(usuario => {
+        const matchesSearch = usuario.nombre_completo.toLowerCase().includes(searchTerm) || 
+                            usuario.usuario.toLowerCase().includes(searchTerm);
+        const matchesArea = !areaFilterValue || usuario.area === areaFilterValue;
+        const matchesStatus = !statusFilterValue || usuario.estado === statusFilterValue;
+        
+        return matchesSearch && matchesArea && matchesStatus;
+    });
+    
+    displayUsers(filteredUsers);
+}
+
+
+
+// Función para eliminar usuario (actualizada con modal animado)
+function deleteUser(userId, userName) {
+    // Si no hay modales animados, usar confirm simple
+    if (typeof showConfirmModal === 'undefined') {
+        if (!confirm(`¿Está seguro que desea ELIMINAR permanentemente al usuario "${userName}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+        if (!confirm(`CONFIRMACIÓN FINAL:\n¿Realmente desea eliminar a "${userName}"?`)) {
+            return;
+        }
+        executeDeleteUser(userId, userName);
+        return;
+    }
+    
+    // Usar modal animado
+    showConfirmModal({
+        title: '¡Eliminar Usuario!',
+        message: `¿Está seguro que desea eliminar permanentemente al usuario <strong>"${userName}"</strong>?`,
+        subtitle: 'Esta acción no se puede deshacer y se perderán todos los datos.',
+        type: 'danger',
+        confirmText: 'Sí, Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: () => {
+            // Mostrar segundo modal de confirmación
+            showConfirmModal({
+                title: 'Confirmación Final',
+                message: `Confirme nuevamente que desea eliminar a <strong>"${userName}"</strong>`,
+                subtitle: 'Última oportunidad para cancelar.',
+                type: 'warning',
+                confirmText: 'Eliminar Definitivamente',
+                cancelText: 'No, Cancelar',
+                onConfirm: () => {
+                    executeDeleteUser(userId, userName);
+                }
+            });
+        }
+    });
+}
+
+
+// Función para ejecutar la eliminación
+function executeDeleteUser(userId, userName) {
+    const formData = new FormData();
+    formData.append('id', userId);
+    
+    // Mostrar loading
+    showNotification('Eliminando usuario...', 'info');
+    
+    fetch('eliminar_usuario.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Usuario "${userName}" eliminado correctamente`, 'success');
+            loadUsersList(); // Recargar la lista
+        } else {
+            showNotification('Error: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error de conexión', 'error');
+    });
+}
+
+// Función para editar usuario (placeholder - se implementará después)
+function editUser(userId) {
+    showNotification(`Función de edición en desarrollo para usuario ID: ${userId}`, 'info');
+    // TODO: Implementar modal de edición
+}
+
+// Funciones auxiliares
+function getAreaDisplayName(area) {
+    const areas = {
+        'mesa_de_partes': 'Mesa de Partes',
+        'secretaria': 'Secretaría',
+        'inspeccion': 'Inspección',
+        'identificacion': 'Identificación',
+        'balistica': 'Balística',
+        'grafotecnia': 'Grafotecnia',
+        'antropologia': 'Antropología',
+        'cerap': 'CERAP'
+    };
+    return areas[area] || area;
+}
+
+function getCargoDisplayName(cargo) {
+    const cargos = {
+        'jefe_de_unidad': 'Jefe de Unidad'
+    };
+    return cargos[cargo] || cargo;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
 }
 
 // Función para editar usuario

@@ -10,11 +10,10 @@ function openAreasModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Función para abrir manual
 function openManual() {
     showNotification('Abriendo Manual de Usuario...', 'success');
     setTimeout(() => {
-        window.open('data:text/html,<html><head><title>Manual de Usuario</title></head><body style="font-family: Arial; padding: 20px; background: #f0f0f0;"><h1>📖 Manual de Usuario - Sistema Criminalística Puno</h1><h2>Instrucciones de Uso:</h2><ul><li><strong>Administrador:</strong> Acceso para jefatura, mesa de partes y secretaría</li><li><strong>Áreas:</strong> Acceso a diferentes departamentos forenses</li><li><strong>Manual:</strong> Esta guía de usuario</li></ul><h3>Áreas Administrativas:</h3><ul><li><strong>Jefatura:</strong> Gestión ejecutiva y supervisión</li><li><strong>Mesa de Partes:</strong> Gestión de documentos y trámites</li><li><strong>Secretaría:</strong> Administración y apoyo ejecutivo</li></ul><p>Para más información, contacte al administrador del sistema.</p></body></html>', '_blank');
+        window.open('Acceso al Sistema.pdf', '_blank');
     }, 500);
 }
 
@@ -65,31 +64,47 @@ function loginAdmin(event, area) {
     }, 1500);
 }
 
-// Función para acceder a áreas (sin login)
+// 🔥 FUNCIÓN MODIFICADA: Acceder a áreas CON SELECCIÓN
 function accessArea(area) {
-    showNotification(`Accediendo al área de ${area.charAt(0).toUpperCase() + area.slice(1)}...`, 'success');
+    const areaNames = {
+        'inspeccion': 'Inspección Criminalística',
+        'identificacion': 'Identificación Forense',
+        'balistica': 'Balística Forense',
+        'grafotecnia': 'Grafotecnia Forense',
+        'antropologia': 'Antropología Forense',
+        'cerap': 'CERAP'
+    };
+    
+    const areaName = areaNames[area] || area.charAt(0).toUpperCase() + area.slice(1);
+    
+    showNotification(`Redirigiendo al login de ${areaName}...`, 'success');
+    
     setTimeout(() => {
         closeModal('areasModal');
         
+        // 🎯 MODIFICACIÓN PRINCIPAL: Enviar área como parámetro
         switch(area) {
             case 'inspeccion':
-                window.location.href = 'areas/inspeccion.php';
+                window.location.href = `login/login_areas.php?area=inspeccion`;
                 break;
             case 'identificacion':
-                window.location.href = 'areas/identificacion.php';
+                window.location.href = `login/login_areas.php?area=identificacion`;
                 break;
             case 'balistica':
-                window.location.href = 'areas/balistica.php';
+                window.location.href = `login/login_areas.php?area=balistica`;
                 break;
             case 'grafotecnia':
-                window.location.href = 'areas/grafotecnia.php';
+                window.location.href = `login/login_areas.php?area=grafotecnia`;
                 break;
             case 'antropologia':
-                window.location.href = 'areas/antropologia.php';
+                window.location.href = `login/login_areas.php?area=antropologia`;
                 break;
             case 'cerap':
-                window.location.href = 'areas/cerap.php';
+                window.location.href = `login/login_areas.php?area=cerap`;
                 break;
+            default:
+                // Fallback
+                window.location.href = 'login/login_areas.php';
         }
     }, 1000);
 }
@@ -359,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('   - Efectos visuales interactivos');
         console.log('   - Animaciones de hover y clic');
         console.log('   - Notificaciones animadas');
-        console.log('   - Navegación directa a páginas');
+        console.log('   - Navegación con selección de área');
         console.log('   - Efectos de paralaje');
         console.log('   - Animaciones de entrada');
         console.log('');
@@ -369,6 +384,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('   - Parallax scrolling en header');
         console.log('   - Auto-focus en modales');
         console.log('   - Transiciones suaves');
+        console.log('');
+        console.log('🔧 FLUJO DE ÁREAS MODIFICADO:');
+        console.log('   - Selección de área → Login con validación');
+        console.log('   - URLs con parámetros: login_areas.php?area=antropologia');
+        console.log('   - Validación de permisos por área seleccionada');
     }, 2000);
 
     // Efecto de partículas flotantes (opcional)
@@ -432,4 +452,80 @@ window.addEventListener('beforeunload', function() {
     document.querySelectorAll('div[style*="position: fixed"][style*="border-radius: 50%"]').forEach(particle => {
         particle.remove();
     });
+});
+
+// 🎯 FUNCIONES ADICIONALES PARA EL FLUJO DE ÁREAS
+
+// Función para resaltar el área seleccionada visualmente
+function highlightSelectedArea(areaElement, areaName) {
+    // Remover highlight de otras áreas
+    document.querySelectorAll('.area-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Agregar highlight al área seleccionada
+    areaElement.classList.add('selected');
+    
+    // Mostrar feedback visual
+    showNotification(`Área seleccionada: ${areaName}`, 'info');
+    
+    // Agregar efecto de pulso
+    areaElement.style.animation = 'pulse 0.6s ease-in-out';
+    setTimeout(() => {
+        areaElement.style.animation = '';
+    }, 600);
+}
+
+// Función para validar si el área está disponible
+function validateAreaAccess(area) {
+    const availableAreas = ['inspeccion', 'identificacion', 'balistica', 'grafotecnia', 'antropologia', 'cerap'];
+    
+    if (!availableAreas.includes(area)) {
+        showNotification('Área no disponible en este momento', 'warning');
+        return false;
+    }
+    
+    return true;
+}
+
+// Función para manejar errores de navegación
+function handleNavigationError(area) {
+    showNotification(`Error al acceder al área de ${area}. Intente nuevamente.`, 'error');
+    console.error(`Navigation error for area: ${area}`);
+}
+
+// Agregar CSS para el estado seleccionado de áreas
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .area-card.selected {
+            border: 3px solid #4ade80 !important;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(16, 185, 129, 0.1)) !important;
+            transform: translateY(-8px) scale(1.05) !important;
+        }
+        
+        .area-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4ade80;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
 });

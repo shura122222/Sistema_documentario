@@ -1,14 +1,18 @@
 <?php
-$server = "mysql";  // Importante: usar "mysql", no "some-mysql"
+// === CONFIGURACIÓN DE CONEXIÓN ===
+$server = "mysql"; 
 $user = "root";
 $pass = "clave123";
 $db = "criminalistica_db";
 
+// === CONEXIÓN A LA BASE DE DATOS ===
 $conexion = new mysqli($server, $user, $pass, $db);
 
 if ($conexion->connect_errno) {
-    die("Conexion Fallida: " . $conexion->connect_error);
+    die("Conexión fallida: " . $conexion->connect_error);
 } else {
-    echo "¡Conectado exitosamente a la base de datos!";
+    $conexion->set_charset("utf8mb4");
+    // echo "¡Conectado exitosamente a la base de datos!";
 }
+
 ?>

@@ -1,5 +1,5 @@
 # Usa una imagen oficial de PHP con Apache
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 # Habilita extensiones necesarias para MySQL
 RUN docker-php-ext-install mysqli pdo pdo_mysql

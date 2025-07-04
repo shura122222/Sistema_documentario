@@ -63,12 +63,7 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                 <button class="menu-item" onclick="showSection('estadisticas', this)">
                     <i class="fas fa-chart-bar"></i> Estadísticas por Área
                 </button>
-                <button class="menu-item" onclick="showSection('calidad', this)">
-                    <i class="fas fa-award"></i> Control de Calidad
-                </button>
-                <button class="menu-item" onclick="showSection('planificacion', this)">
-                    <i class="fas fa-chess-board"></i> Planificación Estratégica
-                </button>
+
                 <button class="menu-item" onclick="showSection('coordinacion', this)">
                     <i class="fas fa-handshake"></i> Coordinación Inter.
                 </button>
@@ -202,35 +197,7 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                             </button>
                         </div>
                         
-                        <div class="card" onclick="showSection('calidad', document.querySelector('[onclick*=calidad]'))">
-                            <div class="card-header">
-                                <div class="card-icon calidad">
-                                    <i class="fas fa-award"></i>
-                                </div>
-                                <div class="card-title">Control de Calidad</div>
-                            </div>
-                            <div class="card-description">
-                                Supervisión de procedimientos y estándares de calidad. Auditorías internas y mejora continua.
-                            </div>
-                            <button class="card-action">
-                                <i class="fas fa-arrow-right"></i> Auditar
-                            </button>
-                        </div>
-                        
-                        <div class="card" onclick="showSection('planificacion', document.querySelector('[onclick*=planificacion]'))">
-                            <div class="card-header">
-                                <div class="card-icon supervision">
-                                    <i class="fas fa-chess-board"></i>
-                                </div>
-                                <div class="card-title">Planificación Estratégica</div>
-                            </div>
-                            <div class="card-description">
-                                Desarrollo de planes y estrategias institucionales. Objetivos, metas y proyectos a corto y largo plazo.
-                            </div>
-                            <button class="card-action">
-                                <i class="fas fa-arrow-right"></i> Planificar
-                            </button>
-                        </div>
+
                         
                         <div class="card" onclick="showSection('coordinacion', document.querySelector('[onclick*=coordinacion]'))">
                             <div class="card-header">
@@ -269,7 +236,35 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                     </div>
                     
                     <div id="usersList" style="margin-top: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h3>Personal Registrado</h3>
+                        <button class="btn btn-primary" onclick="loadUsersList()">
+                            <i class="fas fa-sync-alt"></i> Actualizar Lista
+                        </button>
+                    </div>
+                    
+                    <!-- Filtros de búsqueda -->
+                    <div style="margin-bottom: 20px; display: flex; gap: 15px;">
+                        <input type="text" id="searchUsers" placeholder="Buscar por nombre o usuario..." style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 300px;">
+                        <select id="filterArea" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Todas las áreas</option>
+                            <option value="mesa_de_partes">Mesa de Partes</option>
+                            <option value="secretaria">Secretaría</option>
+                            <option value="inspeccion">Inspección</option>
+                            <option value="identificacion">Identificación</option>
+                            <option value="balistica">Balística</option>
+                            <option value="grafotecnia">Grafotecnia</option>
+                            <option value="antropologia">Antropología</option>
+                            <option value="cerap">CERAP</option>
+                        </select>
+                        <select id="filterStatus" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Todos los estados</option>
+                            <option value="activo">Activos</option>
+                            <option value="inactivo">Inactivos</option>
+                        </select>
+                    </div>
+                    
+                    <div id="usersTableContainer">
                         <table class="users-table">
                             <thead>
                                 <tr>
@@ -278,53 +273,14 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                                     <th>Área</th>
                                     <th>Cargo</th>
                                     <th>Estado</th>
+                                    <th>Fecha Registro</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="usersTableBody">
                                 <tr>
-                                    <td>Carlos Mendoza</td>
-                                    <td>cmendoza</td>
-                                    <td>Balística</td>
-                                    <td>Perito Principal</td>
-                                    <td><span class="status-badge status-active">Activo</span></td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="editUser('cmendoza')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger" onclick="toggleUserStatus('cmendoza')">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Ana García</td>
-                                    <td>agarcia</td>
-                                    <td>Grafotecnia</td>
-                                    <td>Perito Especialista</td>
-                                    <td><span class="status-badge status-active">Activo</span></td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="editUser('agarcia')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-danger" onclick="toggleUserStatus('agarcia')">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Luis Rodríguez</td>
-                                    <td>lrodriguez</td>
-                                    <td>Identificación</td>
-                                    <td>Técnico</td>
-                                    <td><span class="status-badge status-inactive">Inactivo</span></td>
-                                    <td>
-                                        <button class="btn btn-secondary" onclick="editUser('lrodriguez')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-primary" onclick="toggleUserStatus('lrodriguez')">
-                                            <i class="fas fa-check"></i>
-                                        </button>
+                                    <td colspan="7" style="text-align: center; padding: 20px;">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando usuarios...
                                     </td>
                                 </tr>
                             </tbody>
@@ -490,53 +446,7 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                     </div>
                 </div>
 
-                <!-- SECCIÓN CONTROL DE CALIDAD -->
-                <div id="calidadSection" class="section">
-                    <div class="grid-3">
-                        <div class="card">
-                            <h3><i class="fas fa-clipboard-check"></i> Auditorías</h3>
-                            <p>Programar y revisar auditorías</p>
-                            <button class="btn btn-primary" onclick="manageAudits()">
-                                <i class="fas fa-calendar"></i> Gestionar
-                            </button>
-                        </div>
-                        <div class="card">
-                            <h3><i class="fas fa-certificate"></i> Certificaciones</h3>
-                            <p>Control de certificaciones del personal</p>
-                            <button class="btn btn-primary" onclick="manageCertifications()">
-                                <i class="fas fa-award"></i> Ver Estado
-                            </button>
-                        </div>
-                        <div class="card">
-                            <h3><i class="fas fa-file-medical"></i> Procedimientos</h3>
-                            <p>Revisión de protocolos y procedimientos</p>
-                            <button class="btn btn-primary" onclick="manageProcedures()">
-                                <i class="fas fa-book"></i> Revisar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN PLANIFICACIÓN ESTRATÉGICA -->
-                <div id="planificacionSection" class="section">
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3><i class="fas fa-bullseye"></i> Objetivos Institucionales</h3>
-                            <p>Definir y seguir objetivos estratégicos</p>
-                            <button class="btn btn-primary" onclick="manageObjectives()">
-                                <i class="fas fa-target"></i> Gestionar
-                            </button>
-                        </div>
-                        <div class="card">
-                            <h3><i class="fas fa-project-diagram"></i> Proyectos</h3>
-                            <p>Administrar proyectos y iniciativas</p>
-                            <button class="btn btn-primary" onclick="manageProjects()">
-                                <i class="fas fa-tasks"></i> Ver Proyectos
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <!-- SECCIÓN COORDINACIÓN INTERINSTITUCIONAL -->
                 <div id="coordinacionSection" class="section">
                     <div class="grid-3">
@@ -610,7 +520,7 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
     </div>
 
     <!-- MODAL NUEVO USUARIO -->
-    <div id="newUserModal" class="modal">
+<div id="newUserModal" class="modal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeModal('newUserModal')">&times;</button>
             <h2><i class="fas fa-user-plus"></i> Registrar Nuevo Usuario</h2>
@@ -647,27 +557,20 @@ $loginTime = date('d/m/Y H:i:s', $_SESSION['login_time']);
                         <label class="form-label">Área</label>
                         <select class="form-select" name="area" required>
                             <option value="">Seleccionar área</option>
+                            <option value="mesa_de_partes">Mesa de Partes</option>
+                            <option value="secretaria">Secretaría</option>
+                            <option value="inspeccion">Inspección Criminalística</option>
+                            <option value="identificacion">Identificación Forense</option>
                             <option value="balistica">Balística Forense</option>
-                            <option value="grafotecnia">Grafotecnia</option>
-                            <option value="identificacion">Identificación</option>
-                            <option value="biologia">Biología Forense</option>
-                            <option value="quimica">Química Forense</option>
-                            <option value="fotografia">Fotografía Forense</option>
-                            <option value="informatica">Informática Forense</option>
-                            <option value="acustica">Acústica Forense</option>
+                            <option value="grafotecnia">Grafotecnia Forense</option>
+                            <option value="antropologia">Antropología Forense</option>
+                            <option value="cerap">CERAP</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Cargo</label>
-                        <select class="form-select" name="cargo" required>
-                            <option value="">Seleccionar cargo</option>
-                            <option value="jefe">Jefe de Área</option>
-                            <option value="perito_principal">Perito Principal</option>
-                            <option value="perito_especialista">Perito Especialista</option>
-                            <option value="perito">Perito</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="auxiliar">Auxiliar</option>
-                        </select>
+                        <input type="text" class="form-input" value="Jefe de Unidad" readonly>
+                        <input type="hidden" name="cargo" value="jefe_de_unidad">
                     </div>
                 </div>
                 
