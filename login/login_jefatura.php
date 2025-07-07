@@ -195,19 +195,6 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     echo "<p><strong>Área:</strong> {$config['nombre']}</p>";
     echo "</div>";
     
-    // Mostrar pista de contraseña según el área
-    echo "<div class='password-hint'>";
-    echo "<strong><i class='fas fa-key'></i> Contraseña para {$config['nombre']}:</strong><br>";
-    if ($area === 'mesa_de_partes') {
-        echo "<code>admin123456</code>";
-    } elseif ($area === 'jefatura') {
-        echo "<code>admin123</code>";
-    } elseif ($area === 'secretaria') {
-        echo "<code>secretaria123</code>";
-    } else {
-        echo "<code>Contacta al administrador para conocer la contraseña</code>";
-    }
-    echo "</div>";
     
     echo "<form method='POST' action=''>";
     echo "<input type='hidden' name='usuario' value='" . htmlspecialchars($usuario) . "'>";
