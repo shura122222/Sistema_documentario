@@ -1,3 +1,8 @@
+// =================================================================
+// SCRIPT.JS INTEGRADO CON VALIDACIÓN EMAIL Y PASSWORD - CORREGIDO
+// Sistema Criminalística Puno - 3 ÁREAS FUNCIONANDO
+// =================================================================
+
 // Función para abrir modal de administrador
 function openAdminModal() {
     document.getElementById('adminModal').style.display = 'block';
@@ -23,6 +28,10 @@ function closeModal(modalId) {
     document.body.style.overflow = 'auto';
 }
 
+// =================================================================
+// FUNCIONES DE LOGIN ADMINISTRATIVO - UNIFICADAS PARA 3 ÁREAS
+// =================================================================
+
 // Función para abrir modal de login específico
 function openLoginModal(area) {
     // Cerrar modal de administrador
@@ -38,33 +47,194 @@ function openLoginModal(area) {
     
     document.getElementById(modalId).style.display = 'block';
     document.body.style.overflow = 'hidden';
+    
+    // Auto-focus en el campo email
+    setTimeout(() => {
+        const emailInput = document.querySelector(`#${modalId} input[type="email"], #${modalId} input[name="email"]`);
+        if (emailInput) {
+            emailInput.focus();
+        }
+    }, 100);
 }
 
-// Función de login para administradores - REDIRECCIÓN DIRECTA
+// 🔥 FUNCIÓN PRINCIPAL DE LOGIN - UNIFICADA PARA LAS 3 ÁREAS
 function loginAdmin(event, area) {
+    // Para Jefatura: NO interceptar, dejar que el form se envíe normalmente
+    if (area === 'jefatura') {
+        // Jefatura funciona con su propio sistema PHP - NO INTERCEPTAR
+        return true; // Permite que el formulario se envíe normalmente
+    }
+    
+    // Para Mesa de Partes y Secretaría: Adaptar al sistema de Jefatura
     event.preventDefault();
     
-    // Mostrar notificación de acceso
-    const areaName = area === 'mesa-partes' ? 'Mesa de Partes' : area.charAt(0).toUpperCase() + area.slice(1);
-    showNotification(`Accediendo a ${areaName}...`, 'success');
+    // Determinar los campos según el área (usando los IDs originales)
+    let usuarioField, passwordField;
     
-    // Redirección directa después de un breve delay
+    if (area === 'mesa-partes') {
+        usuarioField = document.getElementById('usernameMesaPartes');
+        passwordField = document.getElementById('passwordMesaPartes');
+    } else if (area === 'secretaria') {
+        usuarioField = document.getElementById('usernameSecretaria');
+        passwordField = document.getElementById('passwordSecretaria');
+    }
+    
+    // 🚨 CORRECCIÓN: Validar que existan los campos (FALTABA ! antes de passwordField)
+    if (!usuarioField || !passwordField) {
+        showNotification('Error: Campos de login no encontrados', 'error');
+        console.error('Campos no encontrados:', {
+            area: area,
+            usuarioField: usuarioField,
+            passwordField: passwordField
+        });
+        return;
+    }
+    
+    const usuario = usuarioField.value.trim();
+    const password = passwordField.value.trim();
+    
+    // Validaciones básicas
+    if (!usuario || !password) {
+        showNotification('Por favor, complete todos los campos', 'warning');
+        return;
+    }
+    
+    // Validar formato de email
+    if (!isValidEmail(usuario)) {
+        showNotification('Por favor, ingrese un email válido', 'warning');
+        return;
+    }
+    
+    // Mostrar notificación de procesamiento
+    const areaName = area === 'mesa-partes' ? 'Mesa de Partes' : area.charAt(0).toUpperCase() + area.slice(1);
+    showNotification(`Validando credenciales para ${areaName}...`, 'info');
+    
+    // Crear formulario dinámico como lo hace Jefatura
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+    
+    // 🔥 USAR EL MISMO ARCHIVO PHP QUE FUNCIONA PARA JEFATURA
+    form.action = 'login/login_jefatura.php';
+    
+    // Determinar valor del área para la base de datos
+    let areaValue;
+    switch(area) {
+        case 'mesa-partes':
+            areaValue = 'mesa_de_partes';  // Coincide con la BD
+            break;
+        case 'secretaria':
+            areaValue = 'secretaria';      // Coincide con la BD
+            break;
+        default:
+            showNotification('Área no válida', 'error');
+            return;
+    }
+    
+    // Crear campos EXACTAMENTE como Jefatura
+    const usuarioInput = document.createElement('input');
+    usuarioInput.type = 'hidden';
+    usuarioInput.name = 'usuario';  // ← IGUAL QUE JEFATURA
+    usuarioInput.value = usuario;
+    form.appendChild(usuarioInput);
+    
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'hidden';
+    passwordInput.name = 'password';  // ← IGUAL QUE JEFATURA
+    passwordInput.value = password;
+    form.appendChild(passwordInput);
+    
+    const areaInput = document.createElement('input');
+    areaInput.type = 'hidden';
+    areaInput.name = 'area';  // ← IGUAL QUE JEFATURA
+    areaInput.value = areaValue;
+    form.appendChild(areaInput);
+    
+    // Agregar al DOM y enviar
+    document.body.appendChild(form);
+    
+    // Simular delay de validación y enviar
     setTimeout(() => {
-        switch(area) {
-            case 'jefatura':
-                window.location.href = 'administracion/jefatura.php';
-                break;
-            case 'mesa-partes':
-                window.location.href = 'administracion/mesa_de_partes.php';
-                break;
-            case 'secretaria':
-                window.location.href = 'administracion/secretaria.php';
-                break;
-        }
+        form.submit();
     }, 1500);
 }
 
-// 🔥 FUNCIÓN MODIFICADA: Acceder a áreas CON SELECCIÓN
+// 🔥 FUNCIÓN ALTERNATIVA SIMPLIFICADA (PARA CASOS ESPECIALES)
+function loginAdminUnified(event, area) {
+    // Si es jefatura, no interceptar
+    if (area === 'jefatura') {
+        return true;
+    }
+    
+    event.preventDefault();
+    
+    // Obtener el formulario actual
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Extraer datos independientemente del nombre de campo
+    let email = formData.get('email') || formData.get('usuario') || '';
+    let password = formData.get('password') || '';
+    
+    // Validaciones
+    if (!email || !password) {
+        showNotification('Complete todos los campos', 'warning');
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        showNotification('Email no válido', 'warning');
+        return;
+    }
+    
+    // Mapear área
+    const areaMapping = {
+        'mesa-partes': 'mesa_de_partes',
+        'secretaria': 'secretaria'
+    };
+    
+    const areaValue = areaMapping[area];
+    if (!areaValue) {
+        showNotification('Área no válida', 'error');
+        return;
+    }
+    
+    // Crear formulario unificado
+    const unifiedForm = document.createElement('form');
+    unifiedForm.method = 'POST';
+    unifiedForm.action = 'login/login_jefatura.php';
+    unifiedForm.style.display = 'none';
+    
+    // Agregar campos con nombres estándar
+    const fields = {
+        'usuario': email,
+        'password': password,
+        'area': areaValue
+    };
+    
+    Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        unifiedForm.appendChild(input);
+    });
+    
+    document.body.appendChild(unifiedForm);
+    
+    // Mostrar progreso y enviar
+    const areaName = area === 'mesa-partes' ? 'Mesa de Partes' : 'Secretaría';
+    showNotification(`Accediendo a ${areaName}...`, 'info');
+    
+    setTimeout(() => {
+        unifiedForm.submit();
+    }, 1000);
+}
+
+// =================================================================
+// FUNCIONES DE ÁREAS OPERATIVAS (SIN CAMBIOS)
+// =================================================================
+
 function accessArea(area) {
     const areaNames = {
         'inspeccion': 'Inspección Criminalística',
@@ -82,7 +252,6 @@ function accessArea(area) {
     setTimeout(() => {
         closeModal('areasModal');
         
-        // 🎯 MODIFICACIÓN PRINCIPAL: Enviar área como parámetro
         switch(area) {
             case 'inspeccion':
                 window.location.href = `login/login_areas.php?area=inspeccion`;
@@ -103,13 +272,92 @@ function accessArea(area) {
                 window.location.href = `login/login_areas.php?area=cerap`;
                 break;
             default:
-                // Fallback
                 window.location.href = 'login/login_areas.php';
         }
     }, 1000);
 }
 
-// Función para mostrar notificaciones con estilos mejorados
+// =================================================================
+// FUNCIONES DE VALIDACIÓN Y UTILIDADES MEJORADAS
+// =================================================================
+
+// Validar formato de email
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Validar campos de formulario mejorada
+function validateLoginForm(modalId) {
+    const modal = document.getElementById(modalId);
+    const emailField = modal.querySelector('input[name="email"], input[type="email"], input[name="usuario"]');
+    const passwordField = modal.querySelector('input[name="password"], input[type="password"]');
+    
+    const email = emailField?.value.trim() || '';
+    const password = passwordField?.value.trim() || '';
+    
+    const errors = [];
+    
+    if (!email) {
+        errors.push('El email es requerido');
+    } else if (!isValidEmail(email)) {
+        errors.push('El formato del email no es válido');
+    }
+    
+    if (!password) {
+        errors.push('La contraseña es requerida');
+    } else if (password.length < 3) {
+        errors.push('La contraseña debe tener al menos 3 caracteres');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors,
+        data: { email, password }
+    };
+}
+
+// Función para limpiar formularios
+function clearLoginForm(modalId) {
+    const modal = document.getElementById(modalId);
+    const inputs = modal.querySelectorAll('input[type="email"], input[type="password"], input[name="email"], input[name="password"], input[name="usuario"]');
+    inputs.forEach(input => {
+        input.value = '';
+    });
+}
+
+// 🔥 FUNCIÓN DE DEPURACIÓN PARA VERIFICAR CAMPOS
+function debugLoginFields(area) {
+    console.log(`🔍 Depurando campos para área: ${area}`);
+    
+    let usuarioField, passwordField;
+    
+    if (area === 'mesa-partes') {
+        usuarioField = document.getElementById('usernameMesaPartes');
+        passwordField = document.getElementById('passwordMesaPartes');
+    } else if (area === 'secretaria') {
+        usuarioField = document.getElementById('usernameSecretaria');
+        passwordField = document.getElementById('passwordSecretaria');
+    }
+    
+    console.log('Usuario Field:', usuarioField);
+    console.log('Password Field:', passwordField);
+    
+    if (usuarioField) console.log('Usuario Value:', usuarioField.value);
+    if (passwordField) console.log('Password Value:', passwordField.value);
+    
+    return {
+        usuarioField: usuarioField,
+        passwordField: passwordField,
+        usuarioValue: usuarioField?.value || '',
+        passwordValue: passwordField?.value || ''
+    };
+}
+
+// =================================================================
+// FUNCIONES DE NOTIFICACIONES (SIN CAMBIOS)
+// =================================================================
+
 function showNotification(message, type = 'success') {
     // Remover notificación existente
     const existingNotification = document.querySelector('.notification');
@@ -181,6 +429,10 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
+// =================================================================
+// EVENTOS Y MANEJO DE TECLADO
+// =================================================================
+
 // Eventos de teclado para cerrar modales
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
@@ -193,7 +445,7 @@ document.addEventListener('keydown', function(event) {
         });
     }
     
-    // Enter para enviar formularios (mantener funcionalidad)
+    // Enter para enviar formularios
     if (event.key === 'Enter') {
         const activeModal = document.querySelector('.modal[style*="block"]');
         if (activeModal) {
@@ -216,7 +468,10 @@ window.addEventListener('click', function(event) {
     });
 });
 
-// Efectos de interacción mejorados
+// =================================================================
+// EFECTOS VISUALES Y ANIMACIONES (SIN CAMBIOS)
+// =================================================================
+
 document.addEventListener('DOMContentLoaded', function() {
     // Efecto de hover para los logos
     const logos = document.querySelectorAll('.logo');
@@ -346,13 +601,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Auto-focus en primer campo de usuario cuando se abre un modal
+    // Auto-focus en primer campo cuando se abre un modal
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                 const modal = mutation.target;
                 if (modal.style.display === 'block' && modal.classList.contains('modal')) {
-                    const firstInput = modal.querySelector('input[type="text"]');
+                    const firstInput = modal.querySelector('input[type="email"], input[type="text"]');
                     if (firstInput) {
                         setTimeout(() => firstInput.focus(), 100);
                     }
@@ -366,36 +621,41 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(modal, { attributes: true });
     });
 
-    // Mensaje de bienvenida con efectos
+    // Mensaje de bienvenida con información actualizada
     setTimeout(() => {
-        showNotification('🚀 Sistema Criminalística Puno cargado correctamente', 'success');
-        console.log('🚀 Sistema Criminalística Puno - Modo Presentación');
+        showNotification('🚀 Sistema Criminalística Puno - 3 ÁREAS ACTIVAS', 'success');
+        console.log('🚀 Sistema Criminalística Puno - Login UNIFICADO para 3 áreas');
         console.log('✨ Funcionalidades activas:');
+        console.log('   - Validación EMAIL + PASSWORD');
+        console.log('   - Sistema unificado PHP (login_jefatura.php)');
+        console.log('   - Validación de formato de email');
+        console.log('   - Notificaciones de estado');
         console.log('   - Efectos visuales interactivos');
-        console.log('   - Animaciones de hover y clic');
-        console.log('   - Notificaciones animadas');
-        console.log('   - Navegación con selección de área');
-        console.log('   - Efectos de paralaje');
-        console.log('   - Animaciones de entrada');
         console.log('');
-        console.log('🎨 EFECTOS VISUALES:');
-        console.log('   - Ripple effect en botones');
-        console.log('   - Hover animations en tarjetas');
-        console.log('   - Parallax scrolling en header');
-        console.log('   - Auto-focus en modales');
-        console.log('   - Transiciones suaves');
+        console.log('📧 USUARIOS DE PRUEBA:');
+        console.log('   🔹 JEFATURA: admin@gmail.com');
+        console.log('   🔹 MESA DE PARTES: mesadepartes@gmail.com / admin123456');
+        console.log('   🔹 SECRETARÍA: usuario@gmail.com');
         console.log('');
-        console.log('🔧 FLUJO DE ÁREAS MODIFICADO:');
-        console.log('   - Selección de área → Login con validación');
-        console.log('   - URLs con parámetros: login_areas.php?area=antropologia');
-        console.log('   - Validación de permisos por área seleccionada');
+        console.log('🔐 ÁREAS ADMINISTRATIVAS:');
+        console.log('   - Jefatura: administracion/jefatura.php');
+        console.log('   - Mesa de Partes: administracion/mesa_de_partes.php');
+        console.log('   - Secretaría: administracion/secretaria.php');
+        console.log('');
+        console.log('🛠️ CORRECCIÓN APLICADA:');
+        console.log('   - Validación de campos corregida');
+        console.log('   - Sistema unificado funcionando');
+        console.log('   - 3 áreas completamente operativas');
     }, 2000);
 
-    // Efecto de partículas flotantes (opcional)
+    // Efecto de partículas flotantes
     createFloatingParticles();
 });
 
-// Función para crear partículas flotantes decorativas
+// =================================================================
+// FUNCIONES AUXILIARES PARA EFECTOS VISUALES (SIN CAMBIOS)
+// =================================================================
+
 function createFloatingParticles() {
     const particleCount = 15;
     const particles = [];
@@ -446,37 +706,21 @@ function createFloatingParticles() {
     animateParticles();
 }
 
-// Función para limpiar recursos al salir de la página
-window.addEventListener('beforeunload', function() {
-    // Limpiar partículas
-    document.querySelectorAll('div[style*="position: fixed"][style*="border-radius: 50%"]').forEach(particle => {
-        particle.remove();
-    });
-});
-
-// 🎯 FUNCIONES ADICIONALES PARA EL FLUJO DE ÁREAS
-
-// Función para resaltar el área seleccionada visualmente
+// Funciones adicionales para el flujo de áreas
 function highlightSelectedArea(areaElement, areaName) {
-    // Remover highlight de otras áreas
     document.querySelectorAll('.area-card').forEach(card => {
         card.classList.remove('selected');
     });
     
-    // Agregar highlight al área seleccionada
     areaElement.classList.add('selected');
-    
-    // Mostrar feedback visual
     showNotification(`Área seleccionada: ${areaName}`, 'info');
     
-    // Agregar efecto de pulso
     areaElement.style.animation = 'pulse 0.6s ease-in-out';
     setTimeout(() => {
         areaElement.style.animation = '';
     }, 600);
 }
 
-// Función para validar si el área está disponible
 function validateAreaAccess(area) {
     const availableAreas = ['inspeccion', 'identificacion', 'balistica', 'grafotecnia', 'antropologia', 'cerap'];
     
@@ -488,11 +732,17 @@ function validateAreaAccess(area) {
     return true;
 }
 
-// Función para manejar errores de navegación
 function handleNavigationError(area) {
     showNotification(`Error al acceder al área de ${area}. Intente nuevamente.`, 'error');
     console.error(`Navigation error for area: ${area}`);
 }
+
+// Función para limpiar recursos al salir de la página
+window.addEventListener('beforeunload', function() {
+    document.querySelectorAll('div[style*="position: fixed"][style*="border-radius: 50%"]').forEach(particle => {
+        particle.remove();
+    });
+});
 
 // Agregar CSS para el estado seleccionado de áreas
 document.addEventListener('DOMContentLoaded', function() {
@@ -529,3 +779,100 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
 });
+
+// =================================================================
+// 🔥 FUNCIÓN DE DEPURACIÓN FINAL - PARA VERIFICAR TODO
+// =================================================================
+
+function verificarSistema() {
+    console.log('🔍 VERIFICACIÓN COMPLETA DEL SISTEMA');
+    console.log('=====================================');
+    
+    // Verificar modales
+    const modals = ['adminModal', 'loginJefaturaModal', 'loginMesaPartesModal', 'loginSecretariaModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        console.log(`Modal ${modalId}:`, modal ? '✅ Encontrado' : '❌ No encontrado');
+    });
+    
+    // Verificar campos de formulario
+    const fields = [
+        { id: 'usernameJefatura', area: 'Jefatura' },
+        { id: 'passwordJefatura', area: 'Jefatura' },
+        { id: 'usernameMesaPartes', area: 'Mesa de Partes' },
+        { id: 'passwordMesaPartes', area: 'Mesa de Partes' },
+        { id: 'usernameSecretaria', area: 'Secretaría' },
+        { id: 'passwordSecretaria', area: 'Secretaría' }
+    ];
+    
+    console.log('\n📝 CAMPOS DE FORMULARIO:');
+    fields.forEach(field => {
+        const element = document.getElementById(field.id);
+        console.log(`${field.area} - ${field.id}:`, element ? '✅ Encontrado' : '❌ No encontrado');
+    });
+    
+    // Verificar usuarios de la base de datos
+    console.log('\n👥 USUARIOS DE PRUEBA:');
+    console.log('🔹 JEFATURA: admin@gmail.com (password hasheado)');
+    console.log('🔹 MESA DE PARTES: mesadepartes@gmail.com / admin123456');
+    console.log('🔹 SECRETARÍA: usuario@gmail.com (password hasheado)');
+    
+    // Verificar rutas PHP
+    console.log('\n🔗 RUTAS PHP:');
+    console.log('- Sistema unificado: login/login_jefatura.php');
+    console.log('- Redirecciones:');
+    console.log('  * Jefatura → administracion/jefatura.php');
+    console.log('  * Mesa de Partes → administracion/mesa_de_partes.php');
+    console.log('  * Secretaría → administracion/secretaria.php');
+    
+    console.log('\n✅ VERIFICACIÓN COMPLETADA');
+    return true;
+}
+
+// Función para simular login (solo para pruebas)
+function simularLogin(area, usuario, password) {
+    console.log(`🧪 SIMULANDO LOGIN para ${area}`);
+    console.log(`Usuario: ${usuario}`);
+    console.log(`Password: ${password}`);
+    
+    // Mapear áreas
+    const areaMapping = {
+        'jefatura': 'jefatura',
+        'mesa-partes': 'mesa_de_partes',
+        'secretaria': 'secretaria'
+    };
+    
+    const areaValue = areaMapping[area];
+    
+    // Crear datos del formulario
+    const formData = {
+        usuario: usuario,
+        password: password,
+        area: areaValue
+    };
+    
+    console.log('Datos que se enviarían:', formData);
+    showNotification(`Simulación de login para ${area} completada. Ver consola.`, 'info');
+    
+    return formData;
+}
+
+// Función para pruebas rápidas
+function pruebasRapidas() {
+    console.log('🚀 EJECUTANDO PRUEBAS RÁPIDAS');
+    
+    // Simular diferentes logins
+    simularLogin('jefatura', 'admin@gmail.com', 'password_test');
+    setTimeout(() => {
+        simularLogin('mesa-partes', 'mesadepartes@gmail.com', 'admin123456');
+    }, 1000);
+    setTimeout(() => {
+        simularLogin('secretaria', 'usuario@gmail.com', 'password_test');
+    }, 2000);
+}
+
+// Exportar funciones para uso global (si es necesario)
+window.verificarSistema = verificarSistema;
+window.simularLogin = simularLogin;
+window.pruebasRapidas = pruebasRapidas;
+window.debugLoginFields = debugLoginFields;

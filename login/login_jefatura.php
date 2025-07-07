@@ -22,7 +22,7 @@ function conectarDB() {
     }
 }
 
-// Configuración de áreas administrativas
+// Configuración de áreas administrativas COMPLETA
 $areas_config = [
     'jefatura' => [
         'nombre' => 'Jefatura',
@@ -40,13 +40,13 @@ $areas_config = [
         'icono' => 'fas fa-inbox',
         'redirect' => '../administracion/mesa_de_partes.php'
     ],
-    'administracion' => [
-        'nombre' => 'Administración',
-        'descripcion' => 'Gestión Administrativa y Recursos',
+    'secretaria' => [
+        'nombre' => 'Secretaría',
+        'descripcion' => 'Gestión de Secretaría y Documentación',
         'color_primario' => '#7c3aed',
         'color_secundario' => '#6d28d9',
-        'icono' => 'fas fa-cogs',
-        'redirect' => '../administracion/administracion.php'
+        'icono' => 'fas fa-user-edit',
+        'redirect' => '../administracion/secretaria.php'
     ]
 ];
 
@@ -73,6 +73,7 @@ function mostrarNotificacionUsuarioIncorrecto($usuario = '', $area = '', $mensaj
     echo ".subtitle { color: #6b7280; font-size: 1rem; }";
     echo ".error-message { background: #fef2f2; color: #dc2626; padding: 1.5rem; border-radius: 10px; margin: 1.5rem 0; border-left: 4px solid #dc2626; }";
     echo ".error-details { background: #fef3c7; color: #d97706; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem; }";
+    echo ".valid-users { background: #e0f2fe; color: #0277bd; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem; }";
     echo ".btn-group { display: flex; gap: 1rem; margin-top: 2rem; }";
     echo ".btn { flex: 1; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; text-decoration: none; text-align: center; display: inline-block; }";
     echo ".btn-primary { background: {$config['color_primario']}; color: white; }";
@@ -100,6 +101,18 @@ function mostrarNotificacionUsuarioIncorrecto($usuario = '', $area = '', $mensaj
         echo "<div class='error-details'>";
         echo "<strong>Usuario ingresado:</strong> " . htmlspecialchars($usuario);
         echo "<br><small>Verifica que el usuario esté correctamente escrito</small>";
+        echo "</div>";
+        
+        // Mostrar usuarios válidos según el área
+        echo "<div class='valid-users'>";
+        echo "<strong><i class='fas fa-info-circle'></i> Usuarios válidos para {$config['nombre']}:</strong><br>";
+        if ($area === 'jefatura') {
+            echo "<code>admin@gmail.com</code>";
+        } elseif ($area === 'mesa_de_partes') {
+            echo "<code>mesadepartes@gmail.com</code>";
+        } elseif ($area === 'secretaria') {
+            echo "<code>usuario@gmail.com</code>";
+        }
         echo "</div>";
     }
     
@@ -130,7 +143,7 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     echo "<head>";
     echo "<meta charset='UTF-8'>";
     echo "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-    echo "<title>Verificación de Contraseña - {$config['nombre']}</title>";
+    echo "<title>Contraseña Incorrecta - {$config['nombre']}</title>";
     echo "<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css' rel='stylesheet'>";
     echo "<style>";
     echo "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, {$config['color_primario']} 0%, {$config['color_secundario']} 50%, #0f2027 100%); margin: 0; padding: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }";
@@ -144,6 +157,7 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     echo ".user-info h3 { color: #d97706; margin-bottom: 0.5rem; font-size: 1.1rem; }";
     echo ".user-info p { color: #92400e; margin: 0.3rem 0; font-size: 0.9rem; }";
     echo ".error-message { background: #fee2e2; color: #dc2626; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #ef4444; font-size: 0.9rem; }";
+    echo ".password-hint { background: #e0f2fe; color: #0277bd; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-size: 0.9rem; }";
     echo ".form-group { margin-bottom: 1.5rem; }";
     echo ".form-group label { display: block; color: #374151; font-weight: 600; margin-bottom: 0.5rem; }";
     echo ".form-group input { width: 100%; padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s; box-sizing: border-box; }";
@@ -164,7 +178,7 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     echo "<div class='area-badge'><i class='{$config['icono']}'></i> {$config['nombre']}</div>";
     echo "<div class='warning-icon'><i class='fas fa-exclamation-triangle'></i></div>";
     echo "<h1 class='title'>Contraseña Incorrecta</h1>";
-    echo "<p class='subtitle'>Por favor, verifica tu contraseña</p>";
+    echo "<p class='subtitle'>El usuario es correcto, pero la contraseña no coincide</p>";
     echo "</div>";
     
     if (!empty($error)) {
@@ -174,11 +188,25 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     }
     
     echo "<div class='user-info'>";
-    echo "<h3><i class='fas fa-user'></i> Usuario Identificado</h3>";
+    echo "<h3><i class='fas fa-user-check'></i> Usuario Encontrado</h3>";
     echo "<p><strong>Nombre:</strong> " . htmlspecialchars($nombreCompleto) . "</p>";
     echo "<p><strong>Cargo:</strong> " . htmlspecialchars($cargo) . "</p>";
     echo "<p><strong>Usuario:</strong> " . htmlspecialchars($usuario) . "</p>";
     echo "<p><strong>Área:</strong> {$config['nombre']}</p>";
+    echo "</div>";
+    
+    // Mostrar pista de contraseña según el área
+    echo "<div class='password-hint'>";
+    echo "<strong><i class='fas fa-key'></i> Contraseña para {$config['nombre']}:</strong><br>";
+    if ($area === 'mesa_de_partes') {
+        echo "<code>admin123456</code>";
+    } elseif ($area === 'jefatura') {
+        echo "<code>admin123</code>";
+    } elseif ($area === 'secretaria') {
+        echo "<code>secretaria123</code>";
+    } else {
+        echo "<code>Contacta al administrador para conocer la contraseña</code>";
+    }
     echo "</div>";
     
     echo "<form method='POST' action=''>";
@@ -188,22 +216,22 @@ function mostrarFormularioReintento($usuario, $nombreCompleto, $cargo, $area, $e
     
     echo "<div class='form-group'>";
     echo "<label for='password'><i class='fas fa-lock'></i> Contraseña</label>";
-    echo "<input type='password' id='password' name='password' required autofocus placeholder='Ingresa tu contraseña'>";
+    echo "<input type='password' id='password' name='password' required autofocus placeholder='Ingresa la contraseña correcta'>";
     echo "</div>";
     
     echo "<div class='btn-group'>";
     echo "<button type='submit' class='btn btn-primary'>";
     echo "<i class='fas fa-sign-in-alt'></i> Verificar Contraseña";
     echo "</button>";
-    echo "<a href='../index.html' class='btn btn-secondary'>";
-    echo "<i class='fas fa-arrow-left'></i> Cancelar";
+    echo "<a href='../index.php' class='btn btn-secondary'>";
+    echo "<i class='fas fa-arrow-left'></i> Volver al Login";
     echo "</a>";
     echo "</div>";
     
     echo "</form>";
     
     echo "<div class='security-info'>";
-    echo "<i class='fas fa-info-circle'></i> Por seguridad, asegúrate de ingresar la contraseña correcta";
+    echo "<i class='fas fa-info-circle'></i> Por seguridad, verifica que estés usando la contraseña correcta";
     echo "</div>";
     
     echo "</div>";
@@ -298,20 +326,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        header('Location: ../index.html?error=empty_fields&usuario=' . urlencode($inputUsuario));
+        header('Location: ../index.php?error=empty_fields&usuario=' . urlencode($inputUsuario));
         exit;
     }
     
-    // Validar área válida
-    if (!in_array($inputArea, ['jefatura', 'mesa_de_partes', 'administracion'])) {
-        header('Location: ../index.html?error=invalid_area');
+    // Validar área válida - ACTUALIZADO PARA TRES ÁREAS
+    if (!in_array($inputArea, ['jefatura', 'mesa_de_partes', 'secretaria'])) {
+        header('Location: ../index.php?error=invalid_area');
         exit;
     }
     
     // Conectar a la base de datos
     $pdo = conectarDB();
     if (!$pdo) {
-        header('Location: ../index.html?error=db_connection');
+        header('Location: ../index.php?error=db_connection');
         exit;
     }
     
@@ -330,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user) {
             // Verificar estado del usuario
             if ($user['estado'] !== 'activo') {
-                header('Location: ../index.html?error=user_inactive&usuario=' . urlencode($inputUsuario));
+                header('Location: ../index.php?error=user_inactive&usuario=' . urlencode($inputUsuario));
                 exit;
             }
             
@@ -368,6 +396,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $updateStmt = $pdo->prepare("UPDATE usuarios_admin SET ultimo_acceso = NOW() WHERE id = ?");
                 $updateStmt->execute([$user['id']]);
                 
+                // Registrar log de acceso exitoso
+                error_log("LOGIN EXITOSO: Usuario {$user['usuario']} accedió al área {$user['area']} desde IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
+                
                 // Mostrar página de éxito con redirección automática
                 mostrarPaginaExito($user, $user['area']);
                 exit;
@@ -375,6 +406,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // CONTRASEÑA INCORRECTA - Mostrar formulario de reintento
                 $errorMessage = $isRetry ? 'Contraseña incorrecta. Inténtalo nuevamente.' : 'La contraseña ingresada es incorrecta.';
+                
+                // Registrar intento fallido
+                error_log("LOGIN FALLIDO: Usuario {$user['usuario']} intentó acceder al área {$user['area']} con contraseña incorrecta desde IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
+                
                 mostrarFormularioReintento($user['usuario'], $user['nombre_completo'], $user['cargo'], $user['area'], $errorMessage);
                 exit;
             }
@@ -382,19 +417,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // USUARIO NO ENCONTRADO
             $config = $areas_config[$inputArea] ?? $areas_config['jefatura'];
-            mostrarNotificacionUsuarioIncorrecto($inputUsuario, $inputArea, "El usuario \"" . htmlspecialchars($inputUsuario) . "\" no está registrado en el área de {$config['nombre']}. Por favor, ingrese un usuario válido.");
+            
+            // Registrar intento de acceso con usuario inexistente
+            error_log("USUARIO INEXISTENTE: Intento de acceso con usuario '$inputUsuario' para área '$inputArea' desde IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
+            
+            mostrarNotificacionUsuarioIncorrecto($inputUsuario, $inputArea, "El usuario \"" . htmlspecialchars($inputUsuario) . "\" no está registrado en el área de {$config['nombre']}. Por favor, verifica que el usuario esté correctamente escrito.");
             exit;
         }
         
     } catch (PDOException $e) {
         error_log("Error de consulta BD: " . $e->getMessage());
-        header('Location: ../index.html?error=db_connection');
+        header('Location: ../index.php?error=db_connection');
         exit;
     }
     
 } else {
     // Si no es POST, redireccionar al inicio
-    header('Location: ../index.html');
+    header('Location: ../index.php');
     exit;
 }
 ?>

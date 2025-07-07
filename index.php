@@ -84,7 +84,7 @@
             <form class="login-form" method="POST" action="login/login_jefatura.php">
                 <div class="form-group">
                     <label for="usernameJefatura">Usuario:</label>
-                    <input type="text" id="usernameJefatura" name="usuario" required placeholder="Ingrese su usuario" value="<?php echo isset($_GET['usuario']) ? htmlspecialchars($_GET['usuario']) : ''; ?>">
+                    <input type="text" id="usernameJefatura" name="usuario" required placeholder="Ingrese su email" value="<?php echo isset($_GET['usuario']) ? htmlspecialchars($_GET['usuario']) : ''; ?>">
                 </div>
                 <div class="form-group">
                     <label for="passwordJefatura">Contraseña:</label>
@@ -144,55 +144,85 @@
     </div>
 </div>
 
-    <!-- Modal de Login para Mesa de Partes -->
-    <div id="loginMesaPartesModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-inbox"></i> Acceso - Mesa de Partes</h2>
-                <span class="close" onclick="closeModal('loginMesaPartesModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form class="login-form" onsubmit="loginAdmin(event, 'mesa-partes')">
-                    <div class="form-group">
-                        <label for="usernameMesaPartes">Usuario:</label>
-                        <input type="text" id="usernameMesaPartes" name="username" required placeholder="Ingrese su usuario">
-                    </div>
-                    <div class="form-group">
-                        <label for="passwordMesaPartes">Contraseña:</label>
-                        <input type="password" id="passwordMesaPartes" name="password" required placeholder="Ingrese su contraseña">
-                    </div>
-                    <button type="submit" class="login-button">
-                        <i class="fas fa-sign-in-alt"></i> INGRESAR A MESA DE PARTES
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal de Login para Secretaría -->
-    <div id="loginSecretariaModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-tie"></i> Acceso - Secretaría</h2>
-                <span class="close" onclick="closeModal('loginSecretariaModal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form class="login-form" onsubmit="loginAdmin(event, 'secretaria')">
-                    <div class="form-group">
-                        <label for="usernameSecretaria">Usuario:</label>
-                        <input type="text" id="usernameSecretaria" name="username" required placeholder="Ingrese su usuario">
-                    </div>
-                    <div class="form-group">
-                        <label for="passwordSecretaria">Contraseña:</label>
-                        <input type="password" id="passwordSecretaria" name="password" required placeholder="Ingrese su contraseña">
-                    </div>
-                    <button type="submit" class="login-button">
-                        <i class="fas fa-sign-in-alt"></i> INGRESAR A SECRETARÍA
-                    </button>
-                </form>
-            </div>
+<!-- Modal de Login para Mesa de Partes -->
+<div id="loginMesaPartesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-inbox"></i> Acceso - Mesa de Partes</h2>
+            <span class="close" onclick="closeModal('loginMesaPartesModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form class="login-form" onsubmit="loginAdmin(event, 'mesa-partes')">
+                <div class="form-group">
+                    <label for="usernameMesaPartes">Email:</label>
+                    <input 
+                        type="email" 
+                        id="usernameMesaPartes" 
+                        name="email" 
+                        required 
+                        placeholder="Ingrese su email"
+                        autocomplete="email"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="passwordMesaPartes">Contraseña:</label>
+                    <input 
+                        type="password" 
+                        id="passwordMesaPartes" 
+                        name="password" 
+                        required 
+                        placeholder="Ingrese su contraseña"
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" class="login-button">
+                    <i class="fas fa-sign-in-alt"></i> INGRESAR A MESA DE PARTES
+                </button>
+            </form>
         </div>
     </div>
+</div>
+
+<!-- Modal de Login para Secretaría -->
+<div id="loginSecretariaModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-edit"></i> Acceso - Secretaría</h2>
+            <span class="close" onclick="closeModal('loginSecretariaModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form class="login-form" onsubmit="loginAdmin(event, 'secretaria')">
+                <div class="form-group">
+                    <label for="usernameSecretaria">Email:</label>
+                    <input 
+                        type="email" 
+                        id="usernameSecretaria" 
+                        name="email" 
+                        required 
+                        placeholder="Ingrese su email"
+                        autocomplete="email"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="passwordSecretaria">Contraseña:</label>
+                    <input 
+                        type="password" 
+                        id="passwordSecretaria" 
+                        name="password" 
+                        required 
+                        placeholder="Ingrese su contraseña"
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" class="login-button">
+                    <i class="fas fa-sign-in-alt"></i> INGRESAR A SECRETARÍA
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 
     <!-- Modal de Áreas -->
     <div id="areasModal" class="modal">
